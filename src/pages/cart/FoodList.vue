@@ -4,6 +4,7 @@
       v-model="checked"
       class="checkbox-group"
       checked-color="#ee0a24"
+      @change="handleChange"
     >
       <div
         v-for="(item, index) in store.state.cartList"
@@ -35,17 +36,20 @@
       @submit="onSubmit"
       class="submit-bar"
     >
-      <van-checkbox v-model="checked">全选</van-checkbox>
+      <van-checkbox v-model="checkAll" @change="handleAllChange"
+        >全选</van-checkbox
+      >
     </van-submit-bar>
   </div>
 </template>
 <script>
 import { useStore } from "vuex";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 export default {
   setup() {
     const store = useStore();
     let checked = ref([]);
+    let checkAll = ref(true);
     const totalPrice = computed(() => {
       let total = 0;
       store.state.cartList.forEach((item) => {
@@ -55,10 +59,41 @@ export default {
       });
       return total * 100;
     });
+
+    // 在组件挂载时执行
+    onMounted(() => {
+      updateCheckAll();
+    });
+
+    function handleChange() {
+      updateCheckAll();
+    }
+
+    function handleAllChange(value) {
+      if (value) {
+        checked.value = store.state.cartList.map((item) => item.id);
+      } else {
+        checked.value = [];
+      }
+    }
+
+    const updateCheckAll = () => {
+      let checkNum = 0;
+      store.state.cartList.forEach((item) => {
+        if (checked.value.includes(item.id)) {
+          checkNum += 1;
+        }
+      });
+      checkAll.value = checkNum === store.state.cartList.length;
+    };
+
     return {
       store,
       checked,
       totalPrice,
+      checkAll,
+      handleChange,
+      handleAllChange,
     };
   },
 };
